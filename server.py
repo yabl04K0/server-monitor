@@ -40,16 +40,19 @@ def tg_send(text: str):
 
 def alert(server: str, key: str, message: str, recover=False):
     """Send alert only once per issue (avoid spam). recover=True clears the alert."""
+    send_text = None
     with state_lock:
         alerts = state[server].setdefault("alerts", set())
         if recover:
             if key in alerts:
                 alerts.discard(key)
-                tg_send(f"✅ <b>{server}</b> — {message}")
+                send_text = f"✅ <b>{server}</b> — {message}"
         else:
             if key not in alerts:
                 alerts.add(key)
-                tg_send(f"🚨 <b>{server}</b> — {message}")
+                send_text = f"🚨 <b>{server}</b> — {message}"
+    if send_text:
+        tg_send(send_text)
 
 
 # ─── Metric checks ───────────────────────────────────────────────────────────
@@ -92,6 +95,7 @@ def offline_watchdog():
     while True:
         time.sleep(15)
         now = time.time()
+        pending_messages = []
         with state_lock:
             for server, data in state.items():
                 last = data.get("last_seen", 0)
@@ -99,11 +103,13 @@ def offline_watchdog():
                 if now - last > OFFLINE_TTL:
                     if not was_offline:
                         data.setdefault("alerts", set()).add("offline")
-                        tg_send(f"🔴 <b>{server}</b> — сервер недоступен (нет данных более {OFFLINE_TTL}с)")
+                        pending_messages.append(f"🔴 <b>{server}</b> — сервер недоступен (нет данных более {OFFLINE_TTL}с)")
                 else:
                     if was_offline:
                         data.get("alerts", set()).discard("offline")
-                        tg_send(f"🟢 <b>{server}</b> — сервер снова онлайн")
+                        pending_messages.append(f"🟢 <b>{server}</b> — сервер снова онлайн")
+        for text in pending_messages:
+            tg_send(text)
 
 
 # ─── API endpoints ───────────────────────────────────────────────────────────
