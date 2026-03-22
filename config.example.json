@@ -1,0 +1,27 @@
+{
+  "telegram": {
+    "bot_token": "123456789:AAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "chat_id":   "987654321"
+  },
+
+  "api_secret": "замени-на-свой-секретный-ключ",
+
+  "central_url": "http://IP_ЦЕНТРАЛЬНОГО_СЕРВЕРА:5000",
+
+  "server_name": "web-01",
+
+  "interval_seconds": 30,
+
+  "offline_after_seconds": 90,
+
+  "thresholds": {
+    "cpu":  80,
+    "ram":  80,
+    "disk": 90
+  },
+
+  "services": [
+    "nginx",
+    "my-docker-container"
+  ]
+}
